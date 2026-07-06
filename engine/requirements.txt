@@ -1,0 +1,15 @@
+# --- Inti engine ---
+paho-mqtt==2.1.0
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+
+# --- Inferensi: Ultralytics YOLO (best.pt) ---
+# torch/torchvision sudah ada di base image PyTorch (lihat Dockerfile),
+# ultralytics memakai yang terpasang. Untuk deteksi & segmentasi best.pt.
+ultralytics==8.3.0
+
+# --- Face Recognition (modul Pedestrian + FR) ---
+# insightface antelopev2: deteksi wajah + embedding 512-dim + gender/usia.
+# onnxruntime-gpu (build CUDA-12) di-install terpisah di Dockerfile — wheel PyPI
+# default-nya CUDA 11 (libcublasLt.so.11) yang TIDAK cocok base image cuda12.1.
+insightface==0.7.3

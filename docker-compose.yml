@@ -1,0 +1,269 @@
+# =====================================================================
+# SIGAP — Sistem Intelijen Gabungan Analitik Pengawasan
+# Analitik CCTV Kota Bandar Lampung
+#
+# Stack: PostgreSQL + Mosquitto (MQTT) + Node.js backend + Vue dashboard
+#        + DeepStream (edge inference) + Simulator (dev tanpa GPU)
+# =====================================================================
+
+services:
+  # -------------------------------------------------------------------
+  # PostgreSQL — penyimpanan event, track, alert, metadata kamera
+  # -------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: sigap-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sigap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sigap_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-sigap}
+      TZ: Asia/Jakarta
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sigap} -d ${POSTGRES_DB:-sigap}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [sigap]
+
+  # -------------------------------------------------------------------
+  # Mosquitto — MQTT broker; jembatan event dari edge/DeepStream
+  # -------------------------------------------------------------------
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: sigap-mqtt
+    restart: unless-stopped
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqttdata:/mosquitto/data
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_WS_PORT:-9001}:9001"
+    networks: [sigap]
+
+  # -------------------------------------------------------------------
+  # Backend — REST API + WebSocket + konsumen MQTT -> PostgreSQL
+  # -------------------------------------------------------------------
+  backend:
+    build: ./backend
+    container_name: sigap-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4000
+      DATABASE_URL: postgres://${POSTGRES_USER:-sigap}:${POSTGRES_PASSWORD:-sigap_secret}@postgres:5432/${POSTGRES_DB:-sigap}
+      MQTT_URL: mqtt://mqtt:1883
+      MQTT_TOPIC: sigap/events/#
+      # Tombol "Hubungi Dishub" (wa.me). GANTI dgn nomor WhatsApp Dishub asli (62...).
+      DISHUB_WA: ${DISHUB_WA:-6281234567890}
+      DISHUB_NAME: ${DISHUB_NAME:-Dishub Kota Bandar Lampung}
+      # URL IP speaker command center (kosong = mode simulasi).
+      SPEAKER_BASE_URL: ${SPEAKER_BASE_URL:-}
+      TZ: Asia/Jakarta
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    networks: [sigap]
+
+  # -------------------------------------------------------------------
+  # Simulator — penghasil event dummy 4 modul (dev tanpa GPU/DeepStream)
+  # Nonaktifkan dengan profil 'sim' ketika DeepStream sudah live.
+  # -------------------------------------------------------------------
+  simulator:
+    build: ./simulator
+    container_name: sigap-simulator
+    restart: unless-stopped
+    environment:
+      MQTT_URL: mqtt://mqtt:1883
+      EVENT_INTERVAL_MS: ${EVENT_INTERVAL_MS:-1500}
+      TZ: Asia/Jakarta
+    depends_on:
+      mqtt:
+        condition: service_started
+    networks: [sigap]
+    # PRODUCTION: tidak jalan default. Hidupkan utk dev: `docker compose --profile sim up -d simulator`.
+    profiles: ["sim"]
+
+  # -------------------------------------------------------------------
+  # Dashboard — Vue.js SPA (di-build statis, disajikan via nginx)
+  # -------------------------------------------------------------------
+  dashboard:
+    build:
+      context: ./dashboard
+      args:
+        # RELATIF: nginx dashboard proxy /api, /ws, /engine -> 1 build utk lokal & online.
+        VITE_API_BASE: ${VITE_API_BASE:-}
+        VITE_WS_URL: ${VITE_WS_URL:-}
+        VITE_STREAM_BASE: ${VITE_STREAM_BASE:-/engine}
+    container_name: sigap-dashboard
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${DASHBOARD_PORT:-8080}:80"
+    networks: [sigap]
+
+  # -------------------------------------------------------------------
+  # DeepStream — inference edge (GPU). Aktifkan dengan: --profile gpu
+  # Membutuhkan NVIDIA Container Toolkit + model di deepstream/models.
+  # -------------------------------------------------------------------
+  deepstream:
+    build: ./deepstream
+    container_name: sigap-deepstream
+    restart: unless-stopped
+    environment:
+      MQTT_URL: mqtt://mqtt:1883
+      TZ: Asia/Jakarta
+    depends_on:
+      mqtt:
+        condition: service_started
+    volumes:
+      - ./deepstream/configs:/opt/sigap/configs:ro
+      - ./deepstream/models:/opt/sigap/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # SCAFFOLD, TIDAK DIPAKAI PRODUKSI: engine Python sudah menggantikan peran
+    # DeepStream (semua modul baca HLS seribuwajah). Config masih template
+    # (sumber rtsp://edge/* palsu, models/ kosong) → crash bila dijalankan.
+    # Profil terpisah supaya `--profile gpu up` TIDAK ikut menyalakannya.
+    # Nyalakan sengaja (bila DeepStream benar2 di-wire): `--profile deepstream up -d deepstream`.
+    profiles: ["deepstream"]
+    networks: [sigap]
+
+  # -------------------------------------------------------------------
+  # Engine — "otak" inferensi Python (GPU). Jalan berdampingan DeepStream.
+  # Menjalankan model 4 modul, konsumsi perception DeepStream, publish
+  # event final ke sigap/events/<module>. Aktifkan dengan: --profile gpu
+  # -------------------------------------------------------------------
+  engine:
+    build: ./engine
+    container_name: sigap-engine
+    restart: unless-stopped
+    environment:
+      MQTT_URL: mqtt://mqtt:1883
+      ENGINE_MODULES: ${ENGINE_MODULES:-pedestrian,waste,water,parking}
+      MODELS_DIR: /opt/engine/models
+      ENGINE_VIDEO_DIR: /opt/engine/videos
+      PERCEPTION_TOPIC: sigap/perception/#
+      FRAME_INTERVAL_S: ${FRAME_INTERVAL_S:-5}
+      STREAM_PORT: 8090
+      STREAM_ONLY: ${STREAM_ONLY:-false}   # PRODUCTION: engine emit event deteksi ASLI
+      PARK_DWELL_S: ${PARK_DWELL_S:-20}    # ambang parkir liar DEFAULT (detik); diubah per-kamera dari dashboard
+      LIVE_ENABLED: ${LIVE_ENABLED:-true}  # kamera live pakai stream HLS seribuwajah (mulus)
+      # Buffer playout DALAM (samakan dgn test.py yg terbukti mulus): stream HLS ini stall
+      # sampai ~3 dtk; buffer 5 dtk + prebuffer 2 dtk menyerapnya -> video tak patah/freeze.
+      # Laju tampil 25 fps = laju sumber. Trade-off: latensi tampil bertambah ~beberapa detik.
+      LIVE_BUFFER: ${LIVE_BUFFER:-125}     # ~5 dtk @25fps (sebelumnya 30 = ~1.2 dtk -> underrun saat stall)
+      LIVE_PREBUFFER: ${LIVE_PREBUFFER:-50}  # ~2 dtk isi buffer dulu sebelum mulai tampil
+      LIVE_FPS: ${LIVE_FPS:-25}            # samakan laju tampil dgn laju sumber (sebelumnya 20)
+      # skip_frozen MATI: buang-frame-beku bikin buffer playout kelaparan saat adegan diam
+      # -> video patah/freeze. Proteksi dwell parkir palsu saat freeze sudah dijaga
+      # PARK_FREEZE_GAP_S (jeda observasi tak dihitung dwell), jadi aman dimatikan.
+      PED_SKIP_FROZEN: ${PED_SKIP_FROZEN:-false}
+      PARK_SKIP_FROZEN: ${PARK_SKIP_FROZEN:-false}
+      # MULTIPROCESS: container UTAMA ini menangani PARKIR + SAMPAH. Pipeline PEDESTRIAN
+      # dipindah ke container terpisah `engine-ped` (proses sendiri -> core sendiri ->
+      # inferensi paralel). PED_CAMERAS kosong = pedestrian MATI di sini.
+      PED_CAMERAS: ""
+      PARK_CAMERAS: ${PARK_CAMERAS:-CAM-01,CAM-04}
+      WASTE_CAMERAS: ${WASTE_CAMERAS:-CAM-02,CAM-03}
+      # Timeout I/O FFMPEG (mikrodetik) — read yang macet auto-gagal -> reconnect (anti-stuck)
+      OPENCV_FFMPEG_CAPTURE_OPTIONS: "timeout;8000000"
+      # Token kamera (expired berkala -> tinggal ganti di sini, recreate tanpa rebuild)
+      # Kamera pedestrian (token statis; ganti key di sini bila stream mati)
+      CAM05_MANIFEST: ${CAM05_MANIFEST:-https://sliceseribuwajah.bandarlampungkota.go.id/resource/stream?key=1775808610378}
+      CAM06_MANIFEST: ${CAM06_MANIFEST:-https://sliceseribuwajah.bandarlampungkota.go.id/resource/stream?key=1775806766083}
+      CAM07_MANIFEST: ${CAM07_MANIFEST:-https://sliceseribuwajah.bandarlampungkota.go.id/resource/stream?key=1775808621943}
+      TZ: Asia/Jakarta
+    depends_on:
+      mqtt:
+        condition: service_started
+    ports:
+      - "${STREAM_PORT:-8090}:8090"   # video live teranotasi (MJPEG) -> dashboard
+    volumes:
+      - ./engine/models:/opt/engine/models
+      - ./engine/videos:/opt/engine/videos
+      - ./engine/enrollment:/opt/engine/enrollment
+      - ./engine/data:/opt/engine/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles: ["gpu"]
+    networks: [sigap]
+
+  # -------------------------------------------------------------------
+  # Engine PEDESTRIAN — PROSES TERPISAH (multiprocess). Pipeline pedestrian+FR
+  # berat (insightface) -> diisolasi ke container sendiri supaya jalan paralel di
+  # core lain & TIDAK menahan giliran inferensi parkir/sampah di engine utama.
+  # Berbagi GPU + volume data yang SAMA (file snapshot disjoint: meta.json di sini,
+  # park_meta/waste_meta di engine utama). nginx me-rute stream/galeri pedestrian ke sini.
+  # -------------------------------------------------------------------
+  engine-ped:
+    build: ./engine
+    image: seribuwajahlampung-engine        # pakai image yg sama (hindari build dobel)
+    container_name: sigap-engine-ped
+    restart: unless-stopped
+    environment:
+      MQTT_URL: mqtt://mqtt:1883
+      ENGINE_MODULES: pedestrian
+      MODELS_DIR: /opt/engine/models
+      ENGINE_VIDEO_DIR: /opt/engine/videos
+      PERCEPTION_TOPIC: sigap/perception/#
+      STREAM_PORT: 8090
+      STREAM_ONLY: ${STREAM_ONLY:-false}
+      LIVE_ENABLED: ${LIVE_ENABLED:-true}
+      LIVE_BUFFER: ${LIVE_BUFFER:-125}
+      LIVE_PREBUFFER: ${LIVE_PREBUFFER:-50}
+      LIVE_FPS: ${LIVE_FPS:-25}
+      PED_SKIP_FROZEN: ${PED_SKIP_FROZEN:-false}
+      # HANYA pedestrian di container ini; parkir & sampah dikosongkan -> mati di sini.
+      PED_CAMERAS: ${PED_CAMERAS:-CAM-05,CAM-06,CAM-07}
+      PARK_CAMERAS: ""
+      WASTE_CAMERAS: ""
+      OPENCV_FFMPEG_CAPTURE_OPTIONS: "timeout;8000000"
+      CAM06_MANIFEST: ${CAM06_MANIFEST:-https://sliceseribuwajah.bandarlampungkota.go.id/resource/stream?key=1775806766083}
+      CAM07_MANIFEST: ${CAM07_MANIFEST:-https://sliceseribuwajah.bandarlampungkota.go.id/resource/stream?key=1775808621943}
+      TZ: Asia/Jakarta
+    depends_on:
+      mqtt:
+        condition: service_started
+    volumes:
+      - ./engine/models:/opt/engine/models
+      - ./engine/videos:/opt/engine/videos
+      - ./engine/enrollment:/opt/engine/enrollment
+      - ./engine/data:/opt/engine/data       # VOLUME BERSAMA dgn engine utama (snapshot/ROI)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles: ["gpu"]
+    networks: [sigap]
+
+volumes:
+  pgdata:
+  mqttdata:
+
+networks:
+  sigap:
+    driver: bridge

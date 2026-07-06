@@ -1,0 +1,16 @@
+{
+  "name": "sigap-simulator",
+  "version": "0.1.0",
+  "description": "Penghasil event dummy 4 modul SIGAP -> MQTT (pengganti DeepStream saat dev tanpa GPU)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "mqtt": "^5.7.0"
+  }
+}

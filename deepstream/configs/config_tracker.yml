@@ -1,0 +1,32 @@
+%YAML:1.0
+####################################################################
+# SIGAP — Konfigurasi tracker NvDCF (template ringkas)
+# Tracker memberi ID persisten -> dipakai dwell-time parkir &
+# kontinuitas atribut pedestrian. Gunakan preset NVIDIA sebagai dasar:
+# /opt/nvidia/deepstream/deepstream/samples/configs/.../config_tracker_NvDCF_perf.yml
+####################################################################
+BaseConfig:
+  minDetectorConfidence: 0.3
+
+TargetManagement:
+  enableBboxUnClipping: 1
+  maxTargetsPerStream: 150
+  minIouDiff4NewTarget: 0.5
+  probationAge: 3
+  maxShadowTrackingAge: 30
+
+TrajectoryManagement:
+  useUniqueID: 1          # ID unik global lintas stream (membantu ReID dasar)
+
+DataAssociator:
+  dataAssociatorType: 0
+  associationMatcherType: 1
+  checkClassMatch: 1
+
+StateEstimator:
+  stateEstimatorType: 1   # Kalman
+
+VisualTracker:
+  visualTrackerType: 1    # NvDCF
+  useColorNames: 1
+  useHog: 1

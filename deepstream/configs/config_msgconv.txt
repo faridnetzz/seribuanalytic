@@ -1,0 +1,37 @@
+# =====================================================================
+# Message Converter — pemetaan metadata DeepStream -> payload JSON.
+# Dengan payload-type=1 (custom), gunakan library msg2p custom untuk
+# menghasilkan format envelope SIGAP yang dipahami backend consumer:
+#   { messageId, ts, cameraId, module, eventType, confidence, data }
+#
+# Sensor/place/module di sini menjadi rujukan camera-id pada payload.
+# Tambahkan satu blok [sensorN] per kamera.
+# =====================================================================
+[sensor0]
+enable=1
+id=CAM-01
+type=Camera
+location=Pasar Tengah
+description=Tanjung Karang Pusat
+
+[sensor1]
+enable=1
+id=CAM-02
+type=Camera
+location=Gang Pasar Bawah
+description=Teluk Betung Selatan
+
+[sensor2]
+enable=1
+id=CAM-03
+type=Camera
+location=Jembatan Beton
+description=Way Awi
+
+# (sensor3..sensor7 -> CAM-04..CAM-08)
+
+[place0]
+enable=1
+id=bandar-lampung
+name=Kota Bandar Lampung
+type=city

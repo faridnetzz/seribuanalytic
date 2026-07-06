@@ -1,0 +1,7 @@
+# Taruh video uji (.mp4) di sini untuk dev sebelum ada akses NVR/RTSP.
+# Penamaan:
+#   <CAM-ID>.mp4   -> dipakai khusus kamera itu, mis. CAM-03.mp4
+#   test.mp4       -> fallback dipakai SEMUA kamera berbasis frame (sampah/air)
+#
+# Modul sampah/air akan otomatis membaca file ini (di-loop) alih-alih RTSP.
+# File video TIDAK di-commit (lihat .dockerignore).

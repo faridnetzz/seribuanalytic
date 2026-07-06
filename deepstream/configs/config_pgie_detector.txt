@@ -1,0 +1,26 @@
+# =====================================================================
+# PGIE — Detektor utama (orang + kendaraan)  [TEMPLATE]
+# Ganti model-engine-file / onnx-file dengan model Anda.
+# Rekomendasi: YOLOv8/PeopleNet untuk orang, TrafficCamNet untuk kendaraan,
+# atau satu detektor multi-kelas. Sesuaikan num-detected-classes & labels.
+# =====================================================================
+[property]
+gpu-id=0
+net-scale-factor=0.0039215697906911373
+# --- ISI PATH MODEL DI SINI ---
+# onnx-file=/opt/sigap/models/detector.onnx
+# model-engine-file=/opt/sigap/models/detector.onnx_b8_gpu0_fp16.engine
+labelfile-path=/opt/sigap/models/labels_detector.txt
+batch-size=8
+network-mode=2          ; 0=FP32 1=INT8 2=FP16
+num-detected-classes=4  ; mis. person, car, motorcycle, truck
+interval=0
+gie-unique-id=1
+process-mode=1          ; 1 = primary
+cluster-mode=2          ; NMS
+maintain-aspect-ratio=1
+
+[class-attrs-all]
+pre-cluster-threshold=0.35
+nms-iou-threshold=0.45
+topk=300

@@ -1,0 +1,62 @@
+# Environment
+.env
+*.local
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+.vite/
+
+# DeepStream artefak besar
+deepstream/models/*.engine
+deepstream/models/*.onnx
+deepstream/models/*.etlt
+deepstream/models/*.caffemodel
+deepstream/models/*.wts
+deepstream/models/*.bin
+
+# Engine: model & video uji (besar, tidak di-commit)
+engine/models/*.pt
+engine/models/*.onnx
+engine/models/*.engine
+engine/videos/*.mp4
+engine/videos/*.mkv
+engine/videos/*.avi
+
+# Logs & data lokal
+*.log
+pgdata/
+mqttdata/
+
+# Model weights (besar / runtime — transfer terpisah via scp)
+*.pt
+engine/models/
+deepstream/models/
+engine/data/
+
+# Insightface auto-download models
+**/insightface/models/
+
+# Dataset & hasil training (besar — tidak di-commit)
+dataset_raw/
+dataset_merged/
+dataset_upload/
+dataset_upload_4/
+dataset_v2/
+dataset_v3/
+runs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

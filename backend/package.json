@@ -1,0 +1,21 @@
+{
+  "name": "sigap-backend",
+  "version": "0.1.0",
+  "description": "SIGAP — REST API + WebSocket + konsumen MQTT untuk analitik CCTV Bandar Lampung",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mqtt": "^5.7.0",
+    "pg": "^8.12.0",
+    "ws": "^8.17.1"
+  }
+}

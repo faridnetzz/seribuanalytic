@@ -1,0 +1,70 @@
+/* ==== SIGAP theme — LIGHT, selaras web newseribuwajah.bandarlampungkota.go.id
+   (biru pemkot #548FD5, neutral slate, font Geist) agar serasi saat diintegrasikan ==== */
+:root {
+  --bg: #eef2f7;          /* latar halaman (slate terang) */
+  --bg-2: #f8fafc;
+  --panel: #ffffff;       /* kartu */
+  --panel-2: #f1f5f9;     /* hover/aktif */
+  --line: #e2e8f0;        /* border (slate-200) */
+  --line-soft: #eef2f6;
+  --txt: #0f172b;         /* teks utama (slate-900) */
+  --txt-dim: #475569;     /* slate-600 */
+  --txt-faint: #64748b;   /* slate-500 */
+  --brand: #548fd5;       /* biru brand seribuwajah */
+  /* aksen modul (Tailwind, kontras di latar terang, harmonis dgn biru) */
+  --ped: #155dfc;         /* biru */
+  --waste: #f59e0b;       /* amber */
+  --water: #0ea5e9;       /* sky */
+  --park: #e11d48;        /* rose */
+  --ok: #00a544;          /* hijau (site) */
+  --warn: #f59e0b;
+  --crit: #e40014;        /* merah (site) */
+  --r: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #app { height: 100%; }
+body {
+  font-family: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(1100px 600px at 85% -10%, rgba(84, 143, 213, 0.12), transparent 60%),
+    radial-gradient(800px 500px at 5% 110%, rgba(48, 128, 255, 0.06), transparent 55%),
+    var(--bg);
+  color: var(--txt);
+  -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: 'Geist Mono', ui-monospace, monospace; }
+a { color: inherit; text-decoration: none; }
+
+/* layout */
+.app { display: grid; grid-template-columns: 248px 1fr; grid-template-rows: 62px 1fr; height: 100vh; }
+.main { overflow-y: auto; padding: 22px 26px 40px; grid-column: 2; }
+
+/* kartu umum */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 43, 0.04), 0 12px 28px -18px rgba(15, 23, 43, 0.18);
+}
+.card h3 { font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+.card-sub { font-size: 11.5px; color: var(--txt-faint); margin-top: 4px; }
+.acc-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* grid util */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.mod-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.cols { display: grid; gap: 14px; }
+.c-2-1 { grid-template-columns: 2fr 1fr; }
+.c-1-1 { grid-template-columns: 1fr 1fr; }
+
+/* page head */
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 16px; }
+.page-head h2 { font-size: 23px; font-weight: 800; display: flex; align-items: center; gap: 11px; }
+.page-head p { color: var(--txt-dim); font-size: 13px; margin-top: 7px; max-width: 620px; line-height: 1.5; }
+.chip { font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 4px 9px; border-radius: 7px; text-transform: uppercase; }
+
+@media (max-width: 1100px) {
+  .kpi-grid, .mod-grid { grid-template-columns: repeat(2, 1fr); }
+  .c-2-1, .c-1-1 { grid-template-columns: 1fr; }
+}

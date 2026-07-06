@@ -1,0 +1,25 @@
+# =====================================================================
+# SGIE — Pedestrian Attribute Recognition (PAR)  [TEMPLATE]
+# Klasifikasi multi-label 11 atribut pada crop "person" dari PGIE.
+# Model contoh: PA100K / RAP / model PAR custom (ONNX).
+# Untuk Re-ID lintas-kamera, tambahkan SGIE embedding (mis. OSNet) +
+# logika matching di app custom / post-processing.
+# =====================================================================
+[property]
+gpu-id=0
+net-scale-factor=0.0174291938997821
+offsets=123.675;116.28;103.53
+# --- ISI PATH MODEL DI SINI ---
+# onnx-file=/opt/sigap/models/par_pa100k.onnx
+# model-engine-file=/opt/sigap/models/par_pa100k.onnx_b16_gpu0_fp16.engine
+labelfile-path=/opt/sigap/models/labels_par.txt
+batch-size=16
+network-mode=2
+process-mode=2          ; 2 = secondary
+gie-unique-id=2
+operate-on-gie-id=1
+operate-on-class-ids=0  ; hanya person
+# Multi-label classifier
+network-type=1          ; 1 = classifier
+classifier-threshold=0.5
+output-tensor-meta=1    ; ekspos tensor mentah untuk parsing 11 atribut

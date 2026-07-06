@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+models/*.onnx
+models/*.pt
+models/*.pth
+models/*.engine
+videos/*.mp4
+videos/*.mkv
+videos/*.avi
+.git
+Dockerfile
+.dockerignore

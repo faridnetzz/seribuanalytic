@@ -1,0 +1,12 @@
+# Koneksi MQTT untuk nvmsgbroker (libnvds_mqtt_proto.so)
+[message-broker]
+# Host broker = nama service docker "mqtt"
+hostname=mqtt
+port=1883
+# topic default bila tidak ditentukan di app config
+topic=sigap/perception/objects
+keep-alive=60
+qos=0
+# Auth (kosongkan untuk anonim di jaringan internal)
+#username=
+#password=

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:8090/snapshot/CAM-01 -o park_check.jpg -w \"HTTP=%{http_code} size=%{size_download}\\\\n\")",
+      "Bash(curl -s -X POST http://localhost:8090/roi/CAM-01 -H \"Content-Type: application/json\" -d '{\"polygon\":[]}')",
+      "Bash(rm -f park_check.jpg rb_park.log)",
+      "Bash(curl -s http://localhost:8090/snapshot/CAM-07 -o /dev/null -w \"HTTP=%{http_code} size=%{size_download}\\\\n\")",
+      "Bash(curl -s -o /dev/null -w \"manifest langsung: HTTP=%{http_code} size=%{size_download}\\\\n\" \"https://sliceseribuwajah.bandarlampungkota.go.id/resource/stream?key=1770743094531\" -H \"Referer: https://seribuwajah.bandarlampungkota.go.id/\")",
+      "Bash(curl -s \"http://localhost:4000/api/pedestrian/tracks?limit=4\")",
+      "Bash(python -c ' *)",
+      "Bash(python -m py_compile engine/src/fr_state.py engine/src/enroll.py engine/src/pedestrian.py engine/src/stream_server.py)",
+      "Bash(docker compose *)",
+      "Bash(xargs echo \"error CUDA \\(harusnya 0\\):\")",
+      "Bash(curl -s http://localhost:8090/enroll/list)",
+      "Bash(curl -s -X POST http://localhost:8090/enroll/capture -H \"Content-Type: application/json\" -d '{\"name\":\"Tes Orang\",\"cam\":\"CAM-05\"}')",
+      "Bash(curl -s -v http://localhost:8090/enroll/list)",
+      "Bash(python -m py_compile engine/src/snapshots.py engine/src/pedestrian.py engine/src/stream_server.py engine/src/main.py engine/src/config.py)",
+      "Bash(xargs echo \"error CUDA \\(0=ok\\):\")",
+      "Bash(curl -s \"http://localhost:8090/snapshots?limit=300\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); items=d.get\\('items',[]\\); print\\('total snapshot:', len\\(items\\)\\); [print\\(' ', i['cam'],'| name:',i.get\\('name'\\),'| face:',i.get\\('hasFace'\\),'| ',i.get\\('gender'\\),i.get\\('age'\\)\\) for i in items[:5]]\")",
+      "Bash(curl -s http://localhost:8090/snapshot/CAM-05 -o cam05_now.jpg -w \"HTTP=%{http_code} size=%{size_download}\\\\n\")",
+      "Bash(rm -f cam05_now.jpg rb_snap.log)",
+      "Bash(curl -s \"http://localhost:8090/snapshots?limit=1\")"
+    ]
+  }
+}
