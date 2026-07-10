@@ -54,9 +54,21 @@ def _persist():
         log.error("Gagal menyimpan ROI: %s", e)
 
 
+def _default_zone(cam):
+    """Zona bawaan dari config.PARKING_ZONES — dipakai HANYA bila belum ada ROI yang
+    digambar/di-load utk kamera ini. Supaya deployment baru (roi.json kosong, mis. di
+    server) langsung punya zona parkir berfungsi tanpa harus gambar manual dulu.
+    Tetap bisa ditimpa penuh via 'Atur ROI' di dashboard (set_roi menyimpan ke _rois)."""
+    zones = getattr(config, "PARKING_ZONES", {}).get(cam) or []
+    return zones[0] if zones else None
+
+
 def get(cam):
     with _lock:
-        return _rois.get(cam)
+        if cam in _rois:
+            return _rois[cam]
+    z = _default_zone(cam)
+    return z.get("polygon") if z else None
 
 
 def all_rois():
