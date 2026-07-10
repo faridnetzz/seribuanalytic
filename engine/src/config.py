@@ -156,6 +156,11 @@ PARK_FREEZE_GAP_S = float(os.getenv("PARK_FREEZE_GAP_S", "2.5"))
 # (parkir diam) -> JANGAN reset. Mobil parkir diam -> ID BoT-SORT stabil -> timer jalan.
 PARK_ID_MEMORY_S = float(os.getenv("PARK_ID_MEMORY_S", "6"))
 PARK_ID_MOVE_FRAC = float(os.getenv("PARK_ID_MOVE_FRAC", "0.2"))
+# Anti-akumulasi lintas-kendaraan: track-id berganti di titik SAMA dalam <= ini detik
+# (deteksi ~kontinu) = ID-switch mobil DIAM yg sama -> sesi lanjut. Lebih lama dari ini
+# ATAU posisi bergeser = KENDARAAN LAIN -> sesi BARU (cegah "parkir liar" palsu di
+# persimpangan tempat banyak kendaraan berhenti bergantian di titik yg sama).
+PARK_ID_BRIDGE_S = float(os.getenv("PARK_ID_BRIDGE_S", "2.0"))
 PARK_SNAP_MAX = int(os.getenv("PARK_SNAP_MAX", "200"))   # batas snapshot pelanggaran parkir
 ROI_FILE = os.getenv("ROI_FILE", "/opt/engine/data/roi.json")  # ROI digambar via dashboard
 # Jeda nyalakan kamera satu-per-satu (detik) — cegah GIL/upstream starvation saat
