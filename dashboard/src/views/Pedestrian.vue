@@ -3,8 +3,10 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api } from '../api/client.js';
+import { useStreamCleanup } from '../api/streams.js';
 import KpiCard from '../components/KpiCard.vue';
 
+const rootEl = useStreamCleanup();   // putus stream MJPEG saat pindah halaman (cegah starvation koneksi)
 const sum = ref(null);
 const loading = ref(true);
 
@@ -181,7 +183,7 @@ onMounted(load);
 </script>
 
 <template>
-  <section class="view">
+  <section class="view" ref="rootEl">
     <div class="page-head">
       <div>
         <h2>Pedestrian Attribute + Tracking

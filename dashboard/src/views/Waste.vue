@@ -1,8 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { api } from '../api/client.js';
+import { useStreamCleanup } from '../api/streams.js';
 import KpiCard from '../components/KpiCard.vue';
 import LineChart from '../components/LineChart.vue';
+
+const rootEl = useStreamCleanup();   // putus stream MJPEG saat pindah halaman (cegah starvation koneksi)
 
 const sum = ref(null);
 const piles = ref([]);
@@ -85,7 +88,7 @@ async function clearAll() {
 </script>
 
 <template>
-  <section class="view">
+  <section class="view" ref="rootEl">
     <div class="page-head">
       <div>
         <h2>Deteksi Sampah

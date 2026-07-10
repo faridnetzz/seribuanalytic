@@ -155,6 +155,7 @@ services:
     restart: unless-stopped
     environment:
       MQTT_URL: mqtt://mqtt:1883
+      MQTT_CLIENT_ID: sigap-engine          # UNIK per container (hindari "session taken over")
       ENGINE_MODULES: ${ENGINE_MODULES:-pedestrian,waste,water,parking}
       MODELS_DIR: /opt/engine/models
       ENGINE_VIDEO_DIR: /opt/engine/videos
@@ -223,6 +224,7 @@ services:
     restart: unless-stopped
     environment:
       MQTT_URL: mqtt://mqtt:1883
+      MQTT_CLIENT_ID: sigap-engine-ped      # UNIK per container (hindari "session taken over")
       ENGINE_MODULES: pedestrian
       MODELS_DIR: /opt/engine/models
       ENGINE_VIDEO_DIR: /opt/engine/videos

@@ -31,6 +31,31 @@ _frames = {}      # cam_id -> bytes JPEG terbaru
 _versions = {}    # cam_id -> int (naik tiap frame baru)
 _lock = threading.Lock()
 
+# Placeholder "sumber offline" — ditampilkan saat kamera BELUM pernah mengirim frame
+# (mis. server CCTV upstream down / stream putus di startup). Tanpa ini, <img> ke
+# /stream menggantung hitam tanpa penjelasan. Frame di-regenerate berkala (jam berjalan)
+# supaya jelas ini heartbeat LIVE, bukan gambar error yang beku.
+import numpy as np
+
+
+def _placeholder_jpeg(cam_id):
+    W = 640
+    img = np.full((360, W, 3), 18, dtype=np.uint8)   # abu gelap
+
+    def _center(text, y, scale, color, thick):
+        (tw, _), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, scale, thick)
+        cv2.putText(img, text, ((W - tw) // 2, y), cv2.FONT_HERSHEY_SIMPLEX,
+                    scale, color, thick, cv2.LINE_AA)
+        return tw
+
+    tw = _center("SUMBER CCTV OFFLINE", 158, 0.8, (210, 210, 210), 2)
+    cv2.circle(img, ((W - tw) // 2 - 22, 151), 8, (60, 60, 240), -1)  # titik merah "offline"
+    _center(str(cam_id), 195, 0.7, (120, 120, 120), 2)
+    _center("Menunggu koneksi ke server CCTV...", 250, 0.55, (150, 150, 150), 1)
+    _center(time.strftime("%H:%M:%S"), 300, 0.6, (90, 90, 90), 1)
+    ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 70])
+    return buf.tobytes() if ok else b""
+
 
 def _store(cam_id, jpg_bytes):
     with _lock:
@@ -206,8 +231,7 @@ class _Handler(BaseHTTPRequestHandler):
             with _lock:
                 jpg = _frames.get(cam)
             if not jpg:
-                self.send_error(404)
-                return
+                jpg = _placeholder_jpeg(cam)   # sumber belum ada frame -> placeholder offline
             self._head("image/jpeg", len(jpg))
             self.wfile.write(jpg)
             return
@@ -215,6 +239,7 @@ class _Handler(BaseHTTPRequestHandler):
             cam = path.split("/", 2)[2]
             self._head("multipart/x-mixed-replace; boundary=frame")
             last_ver = -1
+            last_ph = 0.0
             try:
                 while True:
                     with _lock:
@@ -222,6 +247,12 @@ class _Handler(BaseHTTPRequestHandler):
                         jpg = _frames.get(cam) if ver != last_ver else None
                     if jpg is not None:
                         last_ver = ver
+                    elif ver == 0 and (time.time() - last_ph) > 1.0:
+                        # Kamera belum pernah kirim frame (sumber offline) -> heartbeat
+                        # placeholder tiap 1s supaya <img> tak menggantung hitam.
+                        last_ph = time.time()
+                        jpg = _placeholder_jpeg(cam)
+                    if jpg is not None:
                         self.wfile.write(
                             b"--frame\r\nContent-Type: image/jpeg\r\n"
                             b"Content-Length: " + str(len(jpg)).encode() + b"\r\n\r\n"

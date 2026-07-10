@@ -1,7 +1,12 @@
 """Konfigurasi engine — dibaca dari environment dengan default aman."""
 import os
+import socket
 
 MQTT_URL = os.getenv("MQTT_URL", "mqtt://localhost:1883")
+# ID klien MQTT HARUS UNIK per container. Dua container (engine + engine-ped) memakai
+# image yang sama; bila client_id kembar, broker menendang yang lama ("session taken
+# over") -> loop reconnect tak henti + event bisa hilang. Fallback ke hostname (unik).
+MQTT_CLIENT_ID = os.getenv("MQTT_CLIENT_ID") or f"sigap-engine-{socket.gethostname()}"
 
 
 def _camlist(env, default):

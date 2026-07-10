@@ -15,7 +15,7 @@ class MqttIO:
         u = urlparse(config.MQTT_URL)
         self.host = u.hostname or "localhost"
         self.port = u.port or 1883
-        self.client = mqtt.Client(client_id="sigap-engine",
+        self.client = mqtt.Client(client_id=config.MQTT_CLIENT_ID,
                                   callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
