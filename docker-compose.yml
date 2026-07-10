@@ -156,6 +156,7 @@ services:
     environment:
       MQTT_URL: mqtt://mqtt:1883
       MQTT_CLIENT_ID: sigap-engine          # UNIK per container (hindari "session taken over")
+      SNAP_MAX: ${SNAP_MAX:-2000}           # retensi galeri wajah (FIFO)
       ENGINE_MODULES: ${ENGINE_MODULES:-pedestrian,waste,water,parking}
       MODELS_DIR: /opt/engine/models
       ENGINE_VIDEO_DIR: /opt/engine/videos
@@ -225,6 +226,7 @@ services:
     environment:
       MQTT_URL: mqtt://mqtt:1883
       MQTT_CLIENT_ID: sigap-engine-ped      # UNIK per container (hindari "session taken over")
+      SNAP_MAX: ${SNAP_MAX:-2000}           # retensi galeri wajah (FIFO); halaman Basis Data Wajah menelusuri semua
       ENGINE_MODULES: pedestrian
       MODELS_DIR: /opt/engine/models
       ENGINE_VIDEO_DIR: /opt/engine/videos

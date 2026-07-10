@@ -173,11 +173,13 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if path == "/snapshots":
             q = parse_qs(parsed.query)
+            cam = q.get("cam", [None])[0]
+            identity = q.get("identity", [None])[0]
             items = snapshots.list_items(
-                cam=(q.get("cam", [None])[0]),
-                identity=(q.get("identity", [None])[0]),
-                limit=int(q.get("limit", ["240"])[0]))
-            self._json_ok({"items": items})
+                cam=cam, identity=identity,
+                limit=int(q.get("limit", ["240"])[0]),
+                offset=int(q.get("offset", ["0"])[0]))
+            self._json_ok({"items": items, "total": snapshots.count_items(cam, identity)})
             return
         if path == "/trajectory":
             q = parse_qs(parsed.query)

@@ -27,6 +27,12 @@ const routes = [
     component: () => import('../views/Parking.vue'),
     meta: { title: 'Parkir Liar' },
   },
+  {
+    path: '/wajah',
+    name: 'faces',
+    component: () => import('../views/FaceGallery.vue'),
+    meta: { title: 'Basis Data Wajah' },
+  },
 ];
 
 export default createRouter({

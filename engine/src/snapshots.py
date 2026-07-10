@@ -93,7 +93,7 @@ def add(cam, body_img, face_img, meta, scene_img=None):
     return sid
 
 
-def list_items(cam=None, identity=None, limit=240):
+def _filtered(cam=None, identity=None):
     with _lock:
         out = list(_items)
     if cam:
@@ -102,7 +102,17 @@ def list_items(cam=None, identity=None, limit=240):
         out = [r for r in out if r.get("name")]
     elif identity == "unknown":
         out = [r for r in out if not r.get("name")]
-    return out[:limit]
+    return out
+
+
+def list_items(cam=None, identity=None, limit=240, offset=0):
+    """Terbaru di depan. offset+limit -> pagination (halaman basis data wajah)."""
+    return _filtered(cam, identity)[offset:offset + limit]
+
+
+def count_items(cam=None, identity=None):
+    """Total snapshot cocok filter (utk pagination di dashboard)."""
+    return len(_filtered(cam, identity))
 
 
 def img_path(sid, kind="body"):
