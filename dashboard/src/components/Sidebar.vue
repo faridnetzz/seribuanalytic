@@ -4,7 +4,6 @@ const live = useLiveStore();
 
 const nav = [
   { to: '/', label: 'Ringkasan Kota', acc: 'var(--water)' },
-  { to: '/wajah', label: 'Basis Data Wajah', acc: 'var(--ped)' },
 ];
 const modules = [
   { to: '/pedestrian', label: 'Pedestrian Tracking', acc: 'var(--ped)' },

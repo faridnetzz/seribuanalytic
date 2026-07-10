@@ -219,8 +219,9 @@ onMounted(load);
       <div class="card">
         <h3><span class="acc-dot" style="background: var(--ped)"></span>Galeri Snapshot
           <span class="chip" style="background: rgba(21,93,252,.15); color: var(--ped)">{{ snaps.length }}</span>
+          <router-link to="/wajah" class="db-link" title="Buka basis data seluruh wajah tersimpan">🗂 Basis Data Wajah →</router-link>
         </h3>
-        <div class="card-sub">Semua orang yang terdeteksi tertangkap otomatis + metadata wajah. <b>Klik foto</b> untuk enroll (beri nama) → langsung dikenali di seluruh kamera.</div>
+        <div class="card-sub">Menampilkan 80 terbaru. Semua orang yang terdeteksi tertangkap otomatis + metadata wajah. <b>Klik foto</b> untuk enroll (beri nama) → langsung dikenali di seluruh kamera. Buka <b>Basis Data Wajah</b> untuk menelusuri seluruh riwayat.</div>
         <div class="snap-filter">
           <button :class="{ on: snapFilter === '' }" @click="setSnapFilter('')">Semua</button>
           <button :class="{ on: snapFilter === 'unknown' }" @click="setSnapFilter('unknown')">Belum dikenal</button>
@@ -320,6 +321,8 @@ onMounted(load);
 .snap-filter { display: flex; gap: 8px; margin-top: 12px; }
 .snap-filter button { font-size: 12px; padding: 5px 12px; border-radius: 7px; border: 1px solid var(--line-soft); background: transparent; color: var(--txt-faint); cursor: pointer; }
 .snap-filter button.on { background: var(--ped); border-color: var(--ped); color: #04221d; font-weight: 700; }
+.db-link { margin-left: auto; font-size: 12px; font-weight: 700; padding: 5px 13px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(21,93,252,.5); background: rgba(21,93,252,.12); color: var(--ped); }
+.db-link:hover { background: rgba(21,93,252,.22); }
 .snap-grid { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; max-height: 560px; overflow-y: auto; }
 .snap { margin: 0; background: #f8fafc; border: 1px solid var(--line-soft); border-radius: 9px; overflow: hidden; cursor: pointer; transition: border-color .15s, transform .1s; }
 .snap:hover { border-color: var(--ped); transform: translateY(-2px); }
